@@ -74,7 +74,14 @@ namespace :runit do
       parent_task.application.define_task Rake::Task, "#{my_namespace}:stop" do
         on roles fetch("runit_resque_#{name}_role".to_sym) do
           count.times.each do |i|
-            runit_execute_command("resque_#{name}_#{i}", resque_runit_stop_commamd)
+            stop_service("resque_#{name}_#{i}")
+          end
+        end
+      end
+      parent_task.application.define_task Rake::Task, "#{my_namespace}:quiet" do
+        on roles fetch("runit_resque_#{name}_role".to_sym) do
+          count.times.each do |i|
+            runit_execute_command("resque_#{name}_#{i}", '2')
           end
         end
       end
@@ -87,6 +94,7 @@ namespace :runit do
 
     task :add_default_hooks do
       after 'deploy:check', 'runit:resque:check'
+      after 'deploy:starting', 'runit:resque:quiet'
       after 'deploy:updated', 'runit:resque:stop'
       after 'deploy:reverted', 'runit:resque:stop'
       after 'deploy:published', 'runit:resque:start'
@@ -117,6 +125,14 @@ namespace :runit do
         key = 'general' if key == '*'
         name = key.gsub(/\s*[^A-Za-z0-9\.\-]\s*/, '_')
         ::Rake::Task["runit:resque:#{name}:stop"].invoke
+      end
+    end
+
+    task :quiet do
+      fetch(:runit_resque_workers).each do |key, value|
+        key = 'general' if key == '*'
+        name = key.gsub(/\s*[^A-Za-z0-9\.\-]\s*/, '_')
+        ::Rake::Task["runit:resque:#{name}:quiet"].invoke
       end
     end
 
