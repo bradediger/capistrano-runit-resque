@@ -74,7 +74,7 @@ namespace :runit do
       parent_task.application.define_task Rake::Task, "#{my_namespace}:stop" do
         on roles fetch("runit_resque_#{name}_role".to_sym) do
           count.times.each do |i|
-            stop_service("resque_#{name}_#{i}")
+            stop_service("resque_#{name}_#{i}", false)
           end
         end
       end
