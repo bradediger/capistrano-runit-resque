@@ -107,7 +107,10 @@ namespace :runit do
                else
                  key.gsub(/\s*[^A-Za-z0-9\.\-]\s*/, '_')
                end
-        set "runit_resque_#{name}_role".to_sym, -> { :app }
+        set "runit_resque_#{name}_role".to_sym, -> { fetch(:runit_resque_role) }
+        count.times do |i|
+          set "runit_resque_#{name}_#{i}_role".to_sym, -> { fetch(:runit_resque_role) }
+        end
         generate_namespace_for_resque_task(name, key, count, task)
       end
     end
