@@ -1,4 +1,5 @@
 include ::Capistrano::Runit
+include ::Capistrano::Runit::ResqueHelper
 
 namespace :load do
   task :defaults do
@@ -7,8 +8,10 @@ namespace :load do
     set :runit_resque_role, -> { :app }
     set :runit_resque_workers, -> { {'*' => 1} }
     set :runit_resque_interval, "5"
-    set :runit_resque_environment_task, false
+    set :runit_resque_environment_task, true
     set :runit_resque_kill_signal, -> { 'QUIT' }
+    set :runit_resque_verbose, -> { true }
+    set :runit_resque_log_file, { ::File.join(shared_path, 'log', "resque.#{resque_environment}.log") }
   end
 end
 
@@ -27,13 +30,10 @@ namespace :runit do
       array << "RAILS_ENV=#{resque_environment}"
       array << "INTERVAL=#{fetch(:runit_resque_interval)}"
       array << "QUEUE=#{queue}"
-      array << "VERBOSE=1"
+      array << "VERBOSE=1" if fetch(:runit_resque_verbose)
       array << "exec #{SSHKit.config.command_map[:rake]} #{"environment" if fetch(:runit_resque_environment_task)} resque:work"
+      array << output_redirection
       array.compact.join(' ')
-    end
-
-    def resque_environment
-      @resque_environment ||= fetch(:rack_env, fetch(:rails_env, 'production'))
     end
 
     def resque_runit_stop_commamd

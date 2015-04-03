@@ -1,9 +1,11 @@
 include ::Capistrano::Runit
+include ::Capistrano::Runit::ResqueHelper
 
 namespace :load do
   task :defaults do
     set :runit_resque_scheduler_default_hooks, -> { true }
     set :runit_resque_scheduler_role, -> { :app }
+    set :runit_resque_scheduler_dynamic, -> { false }
   end
 end
 
@@ -34,13 +36,13 @@ namespace :runit do
     def collect_resque_scheduler_run_command
       array = []
       array << env_variables
-      array << "RAILS_ENV=#{resque_scheduler_environment}"
-      array << "exec #{SSHKit.config.command_map[:rake]} resque:scheduler"
+      array << "RAILS_ENV=#{resque_environment}"
+      array << "INTERVAL=#{fetch(:runit_resque_interval)}"
+      array << 'VERBOSE=1' if fetch(:runit_resque_verbose)
+      array << 'DYNAMIC_SCHEDULE=yes' if fetch(:runit_resque_scheduler_dynamic)
+      array << "exec #{SSHKit.config.command_map[:rake]} #{"environment" if fetch(:runit_resque_environment_task)} resque:scheduler"
+      array << output_redirection
       array.compact.join(' ')
-    end
-
-    def resque_scheduler_environment
-      @resque_scheduler_environment ||= fetch(:rack_env, fetch(:rails_env, 'production'))
     end
 
     task :add_default_hooks do
