@@ -11,7 +11,7 @@ namespace :load do
     set :runit_resque_environment_task, true
     set :runit_resque_kill_signal, -> { 'QUIT' }
     set :runit_resque_verbose, -> { true }
-    set :runit_resque_log_file, { ::File.join(shared_path, 'log', "resque.#{resque_environment}.log") }
+    set :runit_resque_log_file, -> { ::File.join(shared_path, 'log', "resque.#{resque_environment}.log") }
   end
 end
 
