@@ -32,7 +32,7 @@ namespace :runit do
       array << "QUEUE=#{queue}"
       array << "VERBOSE=1" if fetch(:runit_resque_verbose)
       array << "exec #{SSHKit.config.command_map[:rake]} #{"environment" if fetch(:runit_resque_environment_task)} resque:work"
-      array << output_redirection
+      array << output_redirection unless fetch(:runit_resque_log_file).nil?
       array.compact.join(' ')
     end
 
